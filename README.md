@@ -50,9 +50,6 @@ HAR-CNN-BiLSTM/
 ├── notebook.ipynb          # Main Colab notebook (training + evaluation)
 ├── README.md               # Project documentation
 │
-├── data/
-│   └── UCF-101/            # Extracted dataset (downloaded at runtime)
-│
 └── outputs/
     ├── training_curves.png # Accuracy & loss plots
     └── confusion_matrix.png
@@ -178,8 +175,6 @@ The function also displays the first frame of the video with the prediction and 
    test_video("/content/UCF-101/<ClassName>/<video_file>.avi")
    ```
 
-> ⚠️ **Note:** Training on Colab GPU (T4 or A100) is strongly recommended. Full training may take 1–3 hours depending on hardware.
-
 ---
 
 ## 📦 Dependencies
@@ -200,35 +195,4 @@ pip install tensorflow opencv-python numpy matplotlib seaborn scikit-learn
 
 ---
 
-## 📈 Results Summary
 
-| Metric | Value |
-|--------|-------|
-| Test Accuracy | ~XX% *(update after training)* |
-| Test Loss | ~X.XX *(update after training)* |
-
-> Replace placeholders with your actual results after running the notebook.
-
----
-
-## 🔮 Future Work
-
-- [ ] Use a pre-trained CNN backbone (e.g., MobileNetV2, EfficientNet) for better spatial features
-- [ ] Increase frame resolution to 128×128 or 224×224
-- [ ] Extend to all 101 UCF101 classes
-- [ ] Add real-time webcam inference
-- [ ] Export model to TFLite for mobile deployment (Flutter integration)
-
----
-
-## 📄 License
-
-This project is developed for academic and research purposes.  
-Dataset credit: [UCF Center for Research in Computer Vision](https://www.crcv.ucf.edu/data/UCF101/).
-
----
-
-<div align="center">
-  <sub>Built with ❤️ using TensorFlow, Keras, and UCF101 · Deep Learning for Video Understanding</sub>
-</div>
-```
