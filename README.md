@@ -50,6 +50,9 @@ HAR-CNN-BiLSTM/
 ├── notebook.ipynb          # Main Colab notebook (training + evaluation)
 ├── README.md               # Project documentation
 │
+├── data/
+│   └── UCF-101/            # Extracted dataset (downloaded at runtime)
+│
 └── outputs/
     ├── training_curves.png # Accuracy & loss plots
     └── confusion_matrix.png
@@ -175,6 +178,7 @@ The function also displays the first frame of the video with the prediction and 
    test_video("/content/UCF-101/<ClassName>/<video_file>.avi")
    ```
 
+
 ---
 
 ## 📦 Dependencies
@@ -192,6 +196,17 @@ Install via:
 ```bash
 pip install tensorflow opencv-python numpy matplotlib seaborn scikit-learn
 ```
+
+---
+
+## 📈 Results Summary
+
+| Metric | Value |
+|--------|-------|
+| Test Accuracy || Test Accuracy | 81.98% |
+| Test Loss     | 0.6909 |
+
+> Replace placeholders with your actual results after running the notebook.
 
 ---
 
