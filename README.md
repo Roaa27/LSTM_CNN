@@ -1,155 +1,234 @@
-# 🎥 Human Activity Recognition using CNN-BiLSTM (UCF101)
+# 🎬 Human Activity Recognition — CNN + BiLSTM
 
-## 📌 Project Overview
-
-This project implements a Deep Learning model for **Human Activity Recognition (HAR)** using a hybrid architecture of **CNN + Bidirectional LSTM (BiLSTM)**.
-
-The model processes videos by extracting frames, learning spatial features using CNN, and capturing temporal relationships using BiLSTM.
+> **Deep Learning pipeline for video-based action classification on UCF101**  
+> Combines spatial feature extraction via CNN with temporal sequence modeling via Bidirectional LSTM.
 
 ---
 
-## 🎯 Objective
+## 📌 Overview
 
-To classify human activities from videos by combining:
+This project presents an end-to-end **Human Activity Recognition (HAR)** system trained on the [UCF101](https://www.crcv.ucf.edu/data/UCF101/) benchmark dataset. The architecture couples a **convolutional feature extractor** applied per-frame with a **Bidirectional LSTM** that captures temporal dynamics across the sequence — enabling accurate classification of 15 distinct human activities.
 
-* 🧠 **CNN** → Extract spatial features from each frame
-* 🔁 **BiLSTM** → Learn temporal patterns across frames
-
----
-
-## 📂 Dataset
-
-We used the **UCF101 dataset**, a popular benchmark for action recognition.
-
-🔗 Dataset link:
-https://www.crcv.ucf.edu/data/UCF101/
+| Property        | Value                          |
+|-----------------|-------------------------------|
+| Dataset         | UCF101 (15 selected classes)  |
+| Frames/Video    | 20                            |
+| Frame Resolution| 64 × 64 pixels                |
+| Model           | CNN + BiLSTM                  |
+| Classes         | 15                            |
+| Framework       | TensorFlow / Keras            |
 
 ---
 
-## 🏷️ Selected Classes (15 Classes)
+## 🎯 Supported Activity Classes
 
-* WalkingWithDog
-* JumpingJack
-* PushUps
-* Basketball
-* SoccerJuggling
-* VolleyballSpiking
-* TennisSwing
-* Punch
-* PlayingGuitar
-* PlayingPiano
-* GolfSwing
-* HorseRiding
-* SkateBoarding
-* Surfing
-* Bowling
+| # | Class | Description |
+|---|-------|-------------|
+| 0 | WalkingWithDog | Person walking with a dog |
+| 1 | JumpingJack | Person jumping with arms and legs spread |
+| 2 | PushUps | Person doing push-ups |
+| 3 | Basketball | Person playing basketball |
+| 4 | SoccerJuggling | Person juggling a soccer ball |
+| 5 | VolleyballSpiking | Person spiking a volleyball |
+| 6 | TennisSwing | Person swinging a tennis racket |
+| 7 | Punch | Person punching |
+| 8 | PlayingGuitar | Person playing guitar |
+| 9 | PlayingPiano | Person playing piano |
+| 10 | GolfSwing | Person playing golf |
+| 11 | HorseRiding | Person riding a horse |
+| 12 | SkateBoarding | Person skateboarding |
+| 13 | Surfing | Person surfing on waves |
+| 14 | Bowling | Person bowling |
 
 ---
 
-## ⚙️ Data Preprocessing
+## 🗂️ Project Structure
 
-* Extracted frames from each video
-* Selected **20 frames per video**
-* Resized frames to **64×64 pixels**
-* Normalized pixel values to **[0, 1]**
-* Ensured fixed sequence length for LSTM input
+```
+HAR-CNN-BiLSTM/
+│
+├── notebook.ipynb          # Main Colab notebook (training + evaluation)
+├── README.md               # Project documentation
+│
+├── data/
+│   └── UCF-101/            # Extracted dataset (downloaded at runtime)
+│
+└── outputs/
+    ├── training_curves.png # Accuracy & loss plots
+    └── confusion_matrix.png
+```
+
+---
+
+## ⚙️ Data Preprocessing Pipeline
+
+```
+Raw Video (.avi)
+      │
+      ▼
+Extract N_FRAMES (20) via uniform temporal sampling
+      │
+      ▼
+Resize each frame → 64 × 64 px
+      │
+      ▼
+Normalize pixel values to [0.0, 1.0]
+      │
+      ▼
+Stack into tensor: (20, 64, 64, 3)
+      │
+      ▼
+Feed into TimeDistributed(CNN) → BiLSTM
+```
+
+Up to **100 videos per class** are loaded, shuffled, and split 80/20 (train/test) with **stratification** to ensure balanced class representation.
 
 ---
 
 ## 🧠 Model Architecture
 
-### 🔹 CNN Feature Extractor (from scratch)
+### 🔷 CNN Feature Extractor (applied per frame via `TimeDistributed`)
 
-* Conv2D (32 filters) + BatchNormalization + MaxPooling
-* Conv2D (64 filters) + BatchNormalization + MaxPooling
-* Conv2D (128 filters) + BatchNormalization + MaxPooling
-* Dropout (0.3)
-* Flatten
+| Layer | Filters | Kernel | Activation | Notes |
+|-------|---------|--------|------------|-------|
+| Conv2D | 32 | 3×3 | ReLU | + BatchNorm + MaxPool |
+| Conv2D | 64 | 3×3 | ReLU | + BatchNorm + MaxPool |
+| Conv2D | 128 | 3×3 | ReLU | + BatchNorm + MaxPool |
+| Conv2D | 256 | 3×3 | ReLU | + BatchNorm + MaxPool |
+| Dropout | — | — | — | rate = 0.4 |
+| Flatten | — | — | — | Output feature vector |
 
----
+### 🔷 Temporal Model
 
-### 🔹 Temporal Model
+| Layer | Units | Notes |
+|-------|-------|-------|
+| Bidirectional LSTM | 256 (×2) | `return_sequences=False` |
+| Dropout | — | rate = 0.5 |
 
-* **Bidirectional LSTM (128 units)**
-* Dropout (0.5)
+### 🔷 Classifier Head
 
----
-
-### 🔹 Fully Connected Layers
-
-* Dense (64 neurons, ReLU)
-* BatchNormalization
-* Dropout (0.3)
-* Output Layer (15 classes, Softmax)
+| Layer | Units | Activation |
+|-------|-------|------------|
+| Dense | 64 | ReLU |
+| BatchNormalization | — | — |
+| Dropout | — | rate = 0.3 |
+| Dense (output) | 15 | Softmax |
 
 ---
 
 ## 🛠️ Training Configuration
 
-* Optimizer: Adam
-* Loss Function: Categorical Crossentropy
-* Batch Size: 8
-* Epochs: 30
-* Validation Split: 20%
-* Callbacks:
+| Hyperparameter | Value |
+|----------------|-------|
+| Optimizer | Adam |
+| Loss Function | Categorical Crossentropy |
+| Batch Size | 8 |
+| Max Epochs | 60 |
+| Validation Split | 20% |
+| Random Seed | 42 |
 
-  * EarlyStopping (monitor: val_accuracy, patience: 7)
-  * ReduceLROnPlateau (reduce LR on plateau)
+### Callbacks
+
+| Callback | Monitor | Configuration |
+|----------|---------|---------------|
+| `EarlyStopping` | `val_accuracy` | patience=12, restore best weights |
+| `ReduceLROnPlateau` | `val_loss` | factor=0.5, patience=3, min_lr=1e-6 |
 
 ---
 
-## 📊 Evaluation Metrics
+## 📊 Evaluation
 
 The model is evaluated using:
 
-* ✅ Accuracy
-* 📉 Loss
-* 📊 Confusion Matrix
-* 📋 Classification Report
+- ✅ **Test Accuracy** and **Test Loss**
+- 📊 **Confusion Matrix** (seaborn heatmap)
+- 📋 **Classification Report** (precision, recall, F1-score per class)
 
 ---
 
-
-## 🧪 Prediction System
-
-The model predicts the activity from a video and provides:
-
-* 🎯 Predicted Class
-* 🧠 Human-readable Description
-* 📊 Confidence Score
-
----
-
-### 🔍 Example Output
-
-```
-Prediction: Jumping Jack
-Description: Person jumping with arms and legs spread
-Confidence: 99.95%
-```
-
----
-
-## 🧠 Label Mapping
-
-The model maps numeric predictions to readable labels using:
-
-* `LABELS_MAP` → class names
-* `DESCRIPTIONS` → activity descriptions
-
----
-
-## 🚀 How to Run
-
-1. Open **Google Colab**
-2. Upload the notebook
-3. Run all cells sequentially
-4. Test using:
+## 🧪 Inference — Single Video Prediction
 
 ```python
 test_video("/content/UCF-101/JumpingJack/v_JumpingJack_g01_c01.avi")
 ```
 
+**Output:**
+```
+✅ Prediction  : Jumping Jack
+🧠 Description : Person jumping with arms and legs spread
+📊 Confidence  : 99.95%
+```
 
+The function also displays the first frame of the video with the prediction and confidence overlaid.
 
-Developed as part of a Deep Learning project for Human Activity Recognition using video data.
+---
+
+## 🚀 How to Run
+
+1. Open [Google Colab](https://colab.research.google.com/)
+2. Upload `notebook.ipynb`
+3. Run cells sequentially — the notebook will:
+   - Install dependencies (`opencv-python`, `unrar`)
+   - Download & extract the UCF101 dataset (~7 GB)
+   - Preprocess videos and build the dataset
+   - Train the CNN-BiLSTM model
+   - Evaluate and visualize results
+4. Test on any video:
+   ```python
+   test_video("/content/UCF-101/<ClassName>/<video_file>.avi")
+   ```
+
+> ⚠️ **Note:** Training on Colab GPU (T4 or A100) is strongly recommended. Full training may take 1–3 hours depending on hardware.
+
+---
+
+## 📦 Dependencies
+
+```txt
+tensorflow >= 2.x
+opencv-python
+numpy
+matplotlib
+seaborn
+scikit-learn
+```
+
+Install via:
+```bash
+pip install tensorflow opencv-python numpy matplotlib seaborn scikit-learn
+```
+
+---
+
+## 📈 Results Summary
+
+| Metric | Value |
+|--------|-------|
+| Test Accuracy | ~XX% *(update after training)* |
+| Test Loss | ~X.XX *(update after training)* |
+
+> Replace placeholders with your actual results after running the notebook.
+
+---
+
+## 🔮 Future Work
+
+- [ ] Use a pre-trained CNN backbone (e.g., MobileNetV2, EfficientNet) for better spatial features
+- [ ] Increase frame resolution to 128×128 or 224×224
+- [ ] Extend to all 101 UCF101 classes
+- [ ] Add real-time webcam inference
+- [ ] Export model to TFLite for mobile deployment (Flutter integration)
+
+---
+
+## 📄 License
+
+This project is developed for academic and research purposes.  
+Dataset credit: [UCF Center for Research in Computer Vision](https://www.crcv.ucf.edu/data/UCF101/).
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ using TensorFlow, Keras, and UCF101 · Deep Learning for Video Understanding</sub>
+</div>
+```
